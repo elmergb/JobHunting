@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="JobHunting.Application/JobHunting.Application.csproj" />
+  <Project Path="JobHunting.Domain/JobHunting.Domain.csproj" />
+  <Project Path="JobHunting.Infrastructure/JobHunting.Infrastructure.csproj" />
+  <Project Path="JobHunting/JobHunting.csproj" />
+</Solution>
