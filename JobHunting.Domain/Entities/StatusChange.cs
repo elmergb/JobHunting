@@ -25,5 +25,7 @@ namespace JobHunting.Domain.Entities
             ChangedAt = DateTime.UtcNow;
             Reason = reason;
         }
+
+
     }
 }
