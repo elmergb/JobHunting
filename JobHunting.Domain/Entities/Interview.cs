@@ -8,7 +8,6 @@ using ApplicationId = JobHunting.Domain.Primatives.ApplicationId;
 
 namespace JobHunting.Domain.Entities
 {
-    // Domain/Entities/Interview.cs
     public class Interview : Entity<InterviewId>
     {
         public ApplicationId ApplicationId { get; private set; }
@@ -19,7 +18,7 @@ namespace JobHunting.Domain.Entities
         public ContactInfo? Interviewer { get; private set; }
         public InterviewStatus Status { get; private set; }
         public string? Notes { get; private set; }
-        public int? Rating { get; private set; } // 1-5
+        public int? Rating { get; private set; } 
 
         private Interview() { }
 

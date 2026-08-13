@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ApplicationId = JobHunting.Domain.Primatives.ApplicationId;
 
 namespace JobHunting.Domain.Repositories
 {

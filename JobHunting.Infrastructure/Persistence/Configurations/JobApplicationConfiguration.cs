@@ -15,13 +15,16 @@ namespace JobHunting.Infrastructure.Persistence.Configurations
         {
             builder.HasKey(x => x.Id);
 
-            
+            // Ignore read-only properties that are just accessors
+            builder.Ignore(x => x.Interviews);
+            builder.Ignore(x => x.History);
+
             builder.Property(x => x.Id)
                 .HasConversion(
                     id => id.Value,           
                     value => new ApplicationId(value));  
 
-          
+
             builder.Property(x => x.CompanyId)
                 .HasConversion(
                     id => id.Value,
@@ -59,6 +62,15 @@ namespace JobHunting.Infrastructure.Persistence.Configurations
                 .WithOne()
                 .HasForeignKey("ApplicationId")
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(x => x.Offer)
+                .WithOne()
+                .HasForeignKey<Offer>("ApplicationId")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasIndex(x => x.UserId);     
+            builder.HasIndex(x => x.Status);       
+            builder.HasIndex(x => x.AppliedDate);
         }
     }
 }
