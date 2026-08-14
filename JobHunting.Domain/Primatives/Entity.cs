@@ -4,11 +4,10 @@ using System.Text;
 
 namespace JobHunting.Domain.Primatives
 {
-    public abstract class Entity<TId> where TId : notnull
+    public abstract class Entity<TId> : IBaseEntity<TId> where TId : notnull
     {
         public TId Id { get; protected set; } = default!;
 
-        // Equality by ID
         public override bool Equals(object? obj)
         {
             if (obj is not Entity<TId> other) return false;

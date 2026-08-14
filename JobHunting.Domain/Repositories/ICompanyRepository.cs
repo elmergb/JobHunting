@@ -6,9 +6,7 @@ using System.Text;
 
 namespace JobHunting.Domain.Repositories
 {
-    public interface ICompanyRepository
+    public interface ICompanyRepository : IRepository<Company, CompanyId>
     {
-        Task<Company?> GetByIdAsync(CompanyId id, CancellationToken ct = default);
-        Task AddAsync(Company company, CancellationToken ct = default);
     }
 }
