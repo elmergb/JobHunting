@@ -27,6 +27,7 @@ namespace JobHunting.Infrastructure
             // 2. Repositories
             services.AddScoped<IJobApplicationRepository, JobApplicationRepository>();
             services.AddScoped<ICompanyRepository, CompanyRepository>();
+            services.AddScoped(typeof(IRepository<,>), typeof(BaseRepository<,>));
 
             return services;
         }
