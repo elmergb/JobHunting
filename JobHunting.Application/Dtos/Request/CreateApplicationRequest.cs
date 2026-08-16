@@ -16,6 +16,6 @@ namespace JobHunting.Application.Dtos.Request
         string SourceType,     
         string? SourceUrl,
         string? ReferralName,
-        WorkType WorkType
+        string WorkType
     );
 }
