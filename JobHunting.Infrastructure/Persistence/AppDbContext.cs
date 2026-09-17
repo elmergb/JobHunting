@@ -14,6 +14,9 @@ namespace JobHunting.Infrastructure.Persistence
         // DbSet = table sa database
         public DbSet<JobApplication> JobApplications { get; set; } = null!;
         public DbSet<Company> Companies { get; set; } = null!;
+        public DbSet<Document> Documents { get; set; } = null!;
+        public DbSet<User> Users { get; set; } = null!;
+        public DbSet<UserProfile> UserProfiles { get; set; } = null!;
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 

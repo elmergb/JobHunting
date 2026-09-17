@@ -28,4 +28,14 @@ namespace JobHunting.Domain.Primatives
     {
         public static DocumentId New() => new(Guid.NewGuid());
     }
+
+    public record UserId(Guid Value)
+    {
+        public static UserId New() => new(Guid.NewGuid());
+    }
+
+    public record ProfileId(Guid Value)
+    {
+        public static ProfileId New() => new(Guid.NewGuid());
+    }
 }

@@ -13,25 +13,27 @@ using System.Linq;
 using System.Text;
 using ApplicationId = JobHunting.Domain.Primatives.ApplicationId;
 using CompanyId = JobHunting.Domain.Primatives.CompanyId;
+using Microsoft.Extensions.Logging;
 
-namespace JobHunting.Application.Services
+namespace JobHunting.Application.Services.Service
 {
     public class JobApplicationService : IJobApplicationService
     {
         private readonly IJobApplicationRepository _applicationRepository;
         private readonly ICompanyRepository _companyRepository;
-
+        private readonly ILogger<JobApplicationService> _logger;
         public JobApplicationService(
             IJobApplicationRepository applicationRepository,
-            ICompanyRepository companyRepository)
+            ICompanyRepository companyRepository,
+            ILogger<JobApplicationService> logger)
         {
             _applicationRepository = applicationRepository;
             _companyRepository = companyRepository;
+            _logger = logger;
         }
 
         public async Task<Result<ApplicationResponse>> CreateAsync(CreateApplicationRequest request, CancellationToken ct = default)
         {
-            // 1️⃣ Validate required fields
             if (string.IsNullOrWhiteSpace(request.UserId))
                 return Result<ApplicationResponse>.Failure(Error.Invalid("UserId is required"));
 
@@ -44,14 +46,12 @@ namespace JobHunting.Application.Services
             if (string.IsNullOrWhiteSpace(request.WorkType))
                 return Result<ApplicationResponse>.Failure(Error.Invalid("WorkType is required"));
 
-            // 2️⃣ Check if company exists
             var companyId = new CompanyId(request.CompanyId);
             var companyExists = await _companyRepository.ExistsAsync(companyId, ct);
 
-            if (!companyExists)
-                return Result<ApplicationResponse>.Failure(Error.NotFound("Company not found"));
+            //if (!companyExists)
+            //    return Result<ApplicationResponse>.Failure(Error.NotFound("Company not found"));
 
-            // 3️⃣ Parse salary expectation if provided
             Money? salaryExpectation = null;
             if (request.SalaryExpectation.HasValue && request.SalaryExpectation.Value > 0)
             {
@@ -59,21 +59,18 @@ namespace JobHunting.Application.Services
                 salaryExpectation = new Money(request.SalaryExpectation.Value, currency);
             }
 
-            // 4️⃣ Parse and validate SourceType
             if (!Enum.TryParse<SourceType>(request.SourceType, ignoreCase: true, out var sourceType))
             {
                 return Result<ApplicationResponse>.Failure(
                     Error.Invalid($"Invalid SourceType: {request.SourceType}"));
             }
 
-            // 5️⃣ Parse and validate WorkType
             if (!Enum.TryParse<WorkType>(request.WorkType, ignoreCase: true, out var workType))
             {
                 return Result<ApplicationResponse>.Failure(
                     Error.Invalid($"Invalid WorkType: {request.WorkType}"));
             }
 
-            // 6️⃣ Create application source based on type
             ApplicationSource source = sourceType switch
             {
                 SourceType.LinkedIn => ApplicationSource.LinkedIn(request.SourceUrl ?? ""),
@@ -86,7 +83,6 @@ namespace JobHunting.Application.Services
                 }
             };
 
-            // 7️⃣ Create the domain entity
             var application = JobApplication.Create(
                 userId: request.UserId,
                 companyId: companyId,
@@ -96,10 +92,8 @@ namespace JobHunting.Application.Services
                 workType: workType
             );
 
-            // 8️⃣ Save to repository
             await _applicationRepository.AddAsync(application, ct);
 
-            // 9️⃣ Map to response DTO
             var response = MapToResponse(application);
 
             return Result<ApplicationResponse>.Success(response);
@@ -111,9 +105,9 @@ namespace JobHunting.Application.Services
             var application = await _applicationRepository.GetByIdAsync(appId, ct);
 
             if (application is null)
-                return Result<ApplicationResponse>.Failure(Error.NotFound("UserId Not Found"));
+                return Result<ApplicationResponse>.Failure(Error.NotFound("Application not found"));
 
-
+            _logger.LogInformation($"application: {application.Id} - {application.JobTitle}");
             var response = MapToResponse(application);
             return Result<ApplicationResponse>.Success(response);
         }
@@ -133,36 +127,28 @@ namespace JobHunting.Application.Services
         public async Task<Result<InterviewResponse>> ScheduleInterviewAsync(Guid applicationId, ScheduleInterviewRequest request, CancellationToken ct = default)
         {
             if (request.ScheduledAt <= DateTime.UtcNow)
-                return Result<InterviewResponse>.Failure(Error.NotFound("UserId Not Found"));
-
+                return Result<InterviewResponse>.Failure(Error.Invalid("Scheduled date must be in the future"));
 
             var appId = new ApplicationId(applicationId);
             var application = await _applicationRepository.GetByIdAsync(appId, ct);
 
             if (application is null)
-                return Result<InterviewResponse>.Failure(Error.NotFound("UserId Not Found"));
+                return Result<InterviewResponse>.Failure(Error.NotFound("Application not found"));
 
+            // DomainException from ScheduleInterview bubbles up to GlobalExceptionMiddleware
+            var interview = application.ScheduleInterview(
+                type: request.Type,
+                scheduledAt: request.ScheduledAt,
+                duration: TimeSpan.FromMinutes(request.DurationMinutes),
+                interviewer: request.InterviewerName != null
+                    ? new ContactInfo { Name = request.InterviewerName, Role = request.InterviewerRole, Email = request.InterviewerEmail }
+                    : null
+            );
 
-            try
-            {
-                var interview = application.ScheduleInterview(
-                    type: request.Type,
-                    scheduledAt: request.ScheduledAt,
-                    duration: TimeSpan.FromMinutes(request.DurationMinutes),
-                    interviewer: request.InterviewerName != null 
-                        ? new ContactInfo { Name = request.InterviewerName, Role = request.InterviewerRole, Email = request.InterviewerEmail }
-                        : null
-                );
+            await _applicationRepository.UpdateAsync(application, ct);
 
-                await _applicationRepository.UpdateAsync(application, ct);
-
-                var response = MapToInterviewResponse(interview);
-                return Result<InterviewResponse>.Success(response);
-            }
-            catch (Exception ex)
-            {
-                return Result<InterviewResponse>.Failure(Error.NotFound("UserId Not Found"));
-            }
+            var response = MapToInterviewResponse(interview);
+            return Result<InterviewResponse>.Success(response);
         }
 
         public async Task<Result> MoveStatusAsync(Guid applicationId, MoveStatusRequest request, CancellationToken ct = default)
@@ -171,20 +157,14 @@ namespace JobHunting.Application.Services
             var application = await _applicationRepository.GetByIdAsync(appId, ct);
 
             if (application is null)
-                return Result.Failure(Error.NotFound("Not Found"));
+                return Result.Failure(Error.NotFound("Application not found"));
 
-            try
-            {
-                application.MoveToStatus(request.NewStatus, request.Reason);
+            // DomainException from invalid transitions bubbles up to GlobalExceptionMiddleware
+            application.MoveToStatus(request.NewStatus, request.Reason);
 
-                await _applicationRepository.UpdateAsync(application, ct);
+            await _applicationRepository.UpdateAsync(application, ct);
 
-                return Result.Success();
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure(Error.NotFound("Not Found"));
-            }
+            return Result.Success();
         }
 
         private static ApplicationResponse MapToResponse(JobApplication application)

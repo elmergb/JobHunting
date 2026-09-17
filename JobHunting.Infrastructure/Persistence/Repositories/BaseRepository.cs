@@ -24,7 +24,7 @@ namespace JobHunting.Infrastructure.Persistence.Repositories
 
         public virtual async Task<T?> GetByIdAsync(TId id, CancellationToken ct = default)
         {
-            return await _dbSet.FirstOrDefaultAsync(e => e.Id.Equals(id), ct);
+            return await _dbSet.FindAsync(id, ct);
         }
 
         public virtual async Task<IReadOnlyList<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null, CancellationToken ct = default)
@@ -101,7 +101,7 @@ namespace JobHunting.Infrastructure.Persistence.Repositories
 
         public virtual async Task<bool> ExistsAsync(TId id, CancellationToken ct = default)
         {
-            return await AnyAsync(e => e.Id.Equals(id), ct);
+            return await GetByIdAsync(id, ct) is not null;
         }
     }
 }
