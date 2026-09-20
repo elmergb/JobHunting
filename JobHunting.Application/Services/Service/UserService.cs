@@ -42,6 +42,7 @@ namespace JobHunting.Application.Services.Service
                 return Result<UserResponse>.Failure(Error.Invalid("Password must be at least 8 characters"));
 
             var existing = await _userRepository.GetByEmailAsync(request.Email, ct);
+            Console.WriteLine(existing.FirstName);
 
             if (existing is not null)
                 return Result<UserResponse>.Failure(Error.Conflict("Email is already in use"));
@@ -65,7 +66,7 @@ namespace JobHunting.Application.Services.Service
         {
             var id = new UserId(userId);
             var user = await _userRepository.GetByIdAsync(id, ct);
-
+            Console.WriteLine(user?.FirstName);
             if (user is null)
                 return Result<UserResponse>.Failure(Error.NotFound("User not found"));
 
@@ -76,6 +77,7 @@ namespace JobHunting.Application.Services.Service
             new(
                 Id: user.Id.Value,
                 FirstName: user.FirstName,
+                MiddleName: user.MiddleName,
                 LastName: user.LastName,
                 Email: user.Email,
                 CreatedAt: user.CreatedAt

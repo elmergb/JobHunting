@@ -24,7 +24,6 @@ namespace JobHunting.Infrastructure
                     b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
             });
 
-            // 2. Repositories
             services.AddScoped<IJobApplicationRepository, JobApplicationRepository>();
             services.AddScoped<ICompanyRepository, CompanyRepository>();
             services.AddScoped<IUserRepository, UserRepository>();

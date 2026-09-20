@@ -4,12 +4,12 @@ using System.Text;
 
 namespace JobHunting.Application.Dtos.Responses
 {
-    public record UserResponse(
-        Guid Id,
-        string FirstName,
-        string? MiddleName,
-        string LastName,
+    public record LoginResponse(
+        Guid UserId,
         string Email,
-        DateTime CreatedAt
+        string FirstName,
+        string LastName,
+        string AccessToken,
+        DateTime AccessTokenExpiry
     );
 }
