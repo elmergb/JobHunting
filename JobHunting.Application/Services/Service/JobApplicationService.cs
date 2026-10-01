@@ -22,21 +22,21 @@ namespace JobHunting.Application.Services.Service
         private readonly IJobApplicationRepository _applicationRepository;
         private readonly ICompanyRepository _companyRepository;
         private readonly ILogger<JobApplicationService> _logger;
+        private readonly ICurrentUserService _currentUser;
         public JobApplicationService(
             IJobApplicationRepository applicationRepository,
             ICompanyRepository companyRepository,
-            ILogger<JobApplicationService> logger)
+            ILogger<JobApplicationService> logger,
+            ICurrentUserService currentUser)
         {
             _applicationRepository = applicationRepository;
             _companyRepository = companyRepository;
             _logger = logger;
+            _currentUser = currentUser;
         }
 
         public async Task<Result<ApplicationResponse>> CreateAsync(CreateApplicationRequest request, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(request.UserId))
-                return Result<ApplicationResponse>.Failure(Error.Invalid("UserId is required"));
-
             if (string.IsNullOrWhiteSpace(request.JobTitle))
                 return Result<ApplicationResponse>.Failure(Error.Invalid("JobTitle is required"));
 
@@ -83,6 +83,7 @@ namespace JobHunting.Application.Services.Service
                 }
             };
 
+
             var application = JobApplication.Create(
                 userId: request.UserId,
                 companyId: companyId,
@@ -112,11 +113,12 @@ namespace JobHunting.Application.Services.Service
             return Result<ApplicationResponse>.Success(response);
         }
 
-        public async Task<Result<IReadOnlyList<ApplicationResponse>>> GetUserPipelineAsync(string userId, CancellationToken ct = default)
+        public async Task<Result<IReadOnlyList<ApplicationResponse>>> GetUserPipelineAsync(CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(userId))
-                return Result<IReadOnlyList<ApplicationResponse>>.Failure(Error.NotFound("UserId Not Found"));
+            var userId = _currentUser.UserId;
 
+            if (userId is null)
+                return Result<IReadOnlyList<ApplicationResponse>>.Failure(Error.NotFound("Application not found"));
 
             var applications = await _applicationRepository.GetByUserIdAsync(userId, ct);
             var responses = applications.Select(MapToResponse).ToList().AsReadOnly();
@@ -159,7 +161,6 @@ namespace JobHunting.Application.Services.Service
             if (application is null)
                 return Result.Failure(Error.NotFound("Application not found"));
 
-            // DomainException from invalid transitions bubbles up to GlobalExceptionMiddleware
             application.MoveToStatus(request.NewStatus, request.Reason);
 
             await _applicationRepository.UpdateAsync(application, ct);

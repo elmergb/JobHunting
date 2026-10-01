@@ -8,7 +8,6 @@ namespace JobHunting.Application.Dtos.Request
     public record CreateApplicationRequest(
         string UserId,
         Guid CompanyId,
-        string CompanyName,
         string JobTitle,
         string? JobDescription,
         decimal? SalaryExpectation,

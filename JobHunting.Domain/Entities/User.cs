@@ -12,7 +12,6 @@ namespace JobHunting.Domain.Entities
         public string LastName { get; private set; }
         public string Email { get; private set; }
 
-        // --- Auth fields ---
         public string PasswordHash { get; private set; }
         public string? RefreshToken { get; private set; }
         public DateTime? RefreshTokenExpiry { get; private set; }
@@ -20,7 +19,6 @@ namespace JobHunting.Domain.Entities
 
         public DateTime CreatedAt { get; private set; }
 
-        // Navigation to profile (same aggregate boundary)
         public UserProfile? Profile { get; private set; }
 
         private User() { } // EF Core

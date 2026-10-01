@@ -13,6 +13,6 @@ namespace JobHunting.Application.Services.Interface
         Task<Result<InterviewResponse>> ScheduleInterviewAsync(Guid applicationId, ScheduleInterviewRequest request, CancellationToken ct = default);
         Task<Result> MoveStatusAsync(Guid applicationId, MoveStatusRequest request, CancellationToken ct = default);
         Task<Result<ApplicationResponse>> GetByIdAsync(Guid applicationId, CancellationToken ct = default);
-        Task<Result<IReadOnlyList<ApplicationResponse>>> GetUserPipelineAsync(string userId, CancellationToken ct = default);
+        Task<Result<IReadOnlyList<ApplicationResponse>>> GetUserPipelineAsync(CancellationToken ct = default);
     }
 }

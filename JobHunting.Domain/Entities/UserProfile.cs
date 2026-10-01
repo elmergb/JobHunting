@@ -15,20 +15,23 @@ namespace JobHunting.Domain.Entities
 
         private UserProfile() { } // EF Core
 
-        public static UserProfile Create(UserId userId)
+        public static UserProfile Create(UserId userId, string? phone_number, string? avatar_url, string? bio)
         {
             return new UserProfile
             {
                 Id = ProfileId.New(),
                 UserId = userId,
+                PhoneNumber = phone_number,
+                AvatarUrl = avatar_url,
+                Bio = bio,
                 UpdatedAt = DateTime.UtcNow
             };
         }
 
-        public void Update(string? phoneNumber, string? avatarUrl, string? bio)
+        public void Update(string? phone_number, string? avatar_url, string? bio)
         {
-            PhoneNumber = phoneNumber;
-            AvatarUrl = avatarUrl;
+            PhoneNumber = phone_number;
+            AvatarUrl = avatar_url;
             Bio = bio;
             UpdatedAt = DateTime.UtcNow;
         }

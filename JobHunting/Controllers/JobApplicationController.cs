@@ -1,12 +1,13 @@
 ﻿using JobHunting.Application.Dtos.Request;
 using JobHunting.Application.Services.Interface;
+using JobHunting.Domain.Primatives;
 using Microsoft.AspNetCore.Mvc;
 
 
 namespace JobHunting.Controllers
 {
     [ApiController]
-    [Route("job/application")]
+    [Route("api/job/application")]
     [Produces("application/json")]
     public class JobApplicationController : ControllerBase
     {
@@ -28,6 +29,14 @@ namespace JobHunting.Controllers
         public async Task<IActionResult> Get([FromRoute]Guid id, CancellationToken ct = default)
         {
             var result = await _service.GetByIdAsync(id, ct);
+
+            return result.ToActionResult(this);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Get(CancellationToken ct = default)
+        {
+            var result = await _service.GetUserPipelineAsync(ct);
 
             return result.ToActionResult(this);
         }

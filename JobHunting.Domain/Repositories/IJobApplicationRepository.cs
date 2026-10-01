@@ -9,6 +9,6 @@ namespace JobHunting.Domain.Repositories
 {
     public interface IJobApplicationRepository : IRepository<JobApplication, ApplicationId>
     {
-        Task<IReadOnlyList<JobApplication>> GetByUserIdAsync(string userId, CancellationToken ct = default);
+        Task<IReadOnlyList<JobApplication>> GetByUserIdAsync(string UserId, CancellationToken ct = default);
     }
 }

@@ -57,7 +57,7 @@ namespace JobHunting.Application.Services.Service
             var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
 
             if (verificationResult == PasswordVerificationResult.Failed)
-                return Result<LoginResponse>.Failure(Error.Unauthorized("Invalid email or password"));
+                return Result<LoginResponse>.Failure(Error.Invalid("Invalid email or password"));
 
             var accessToken = GenerateAccessToken(user);
             var accessTokenExpiry = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpiryMinutes);

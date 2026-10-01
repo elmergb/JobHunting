@@ -12,12 +12,8 @@ namespace JobHunting.Domain.Entities
     // Domain/Entities/JobApplication.cs
     public class JobApplication : AggregateRoot<ApplicationId>
     {
-        // Identity reference (outside our bounded context)
         public string UserId { get; private set; }
-
-        // Reference to another aggregate (by ID only, never hold Company object)
         public CompanyId CompanyId { get; private set; }
-
         public string JobTitle { get; private set; }
         public string? JobDescription { get; private set; }
         public Money? SalaryExpectation { get; private set; }
@@ -29,8 +25,6 @@ namespace JobHunting.Domain.Entities
         public string? Notes { get; private set; }
         public bool IsArchived { get; private set; }
         public DateTime CreatedAt { get; private set; }
-
-        // Navigation to child entities (same aggregate)
         private readonly List<Interview> _interviews = new();
         public IReadOnlyCollection<Interview> Interviews => _interviews.AsReadOnly();
 
