@@ -39,6 +39,7 @@ namespace JobHunting.Domain.Entities
             string userId,
             CompanyId companyId,
             string jobTitle,
+            string? JobDescription,
             ApplicationSource source,
             Money? salaryExpectation = null,
             WorkType workType = WorkType.Hybrid)
@@ -48,6 +49,7 @@ namespace JobHunting.Domain.Entities
                 Id = ApplicationId.New(),
                 UserId = userId,
                 CompanyId = companyId,
+                JobDescription = JobDescription,
                 JobTitle = jobTitle,
                 Source = source,
                 SalaryExpectation = salaryExpectation,

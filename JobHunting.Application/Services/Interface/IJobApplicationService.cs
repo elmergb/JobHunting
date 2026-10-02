@@ -9,7 +9,7 @@ namespace JobHunting.Application.Services.Interface
 {
     public interface IJobApplicationService
     {
-        Task<Result<ApplicationResponse>> CreateAsync(CreateApplicationRequest request, CancellationToken ct = default);
+        Task<Result<ApplicationResponse>> CreateAsync(CreateJobApplicationRequest request, CancellationToken ct = default);
         Task<Result<InterviewResponse>> ScheduleInterviewAsync(Guid applicationId, ScheduleInterviewRequest request, CancellationToken ct = default);
         Task<Result> MoveStatusAsync(Guid applicationId, MoveStatusRequest request, CancellationToken ct = default);
         Task<Result<ApplicationResponse>> GetByIdAsync(Guid applicationId, CancellationToken ct = default);

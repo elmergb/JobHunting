@@ -23,6 +23,7 @@ namespace JobHunting.Application.Services.Service
         private readonly ICompanyRepository _companyRepository;
         private readonly ILogger<JobApplicationService> _logger;
         private readonly ICurrentUserService _currentUser;
+   
         public JobApplicationService(
             IJobApplicationRepository applicationRepository,
             ICompanyRepository companyRepository,
@@ -35,64 +36,72 @@ namespace JobHunting.Application.Services.Service
             _currentUser = currentUser;
         }
 
-        public async Task<Result<ApplicationResponse>> CreateAsync(CreateApplicationRequest request, CancellationToken ct = default)
+        public async Task<Result<ApplicationResponse>> CreateAsync(CreateJobApplicationRequest request, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(request.JobTitle))
+            var userId = _currentUser.UserId!;
+
+            if (string.IsNullOrWhiteSpace(request.Application.JobTitle))
                 return Result<ApplicationResponse>.Failure(Error.Invalid("JobTitle is required"));
 
-            if (string.IsNullOrWhiteSpace(request.SourceType))
+            if (string.IsNullOrWhiteSpace(request.Application.SourceType))
                 return Result<ApplicationResponse>.Failure(Error.Invalid("SourceType is required"));
 
-            if (string.IsNullOrWhiteSpace(request.WorkType))
+            if (string.IsNullOrWhiteSpace(request.Application.WorkType))
                 return Result<ApplicationResponse>.Failure(Error.Invalid("WorkType is required"));
 
-            var companyId = new CompanyId(request.CompanyId);
-            var companyExists = await _companyRepository.ExistsAsync(companyId, ct);
+            //var companyId = new CompanyId(request.Application.CompanyId);
+            //var companyExists = await _companyRepository.ExistsAsync(companyId, ct);
 
             //if (!companyExists)
             //    return Result<ApplicationResponse>.Failure(Error.NotFound("Company not found"));
 
             Money? salaryExpectation = null;
-            if (request.SalaryExpectation.HasValue && request.SalaryExpectation.Value > 0)
+            if (request.Application.SalaryExpectation.HasValue && request.Application.SalaryExpectation.Value > 0)
             {
-                var currency = string.IsNullOrWhiteSpace(request.SalaryCurrency) ? "PHP" : request.SalaryCurrency;
-                salaryExpectation = new Money(request.SalaryExpectation.Value, currency);
+                var currency = string.IsNullOrWhiteSpace(request.Application.SalaryCurrency) ? "PHP" : request.Application.SalaryCurrency;
+                salaryExpectation = new Money(request.Application.SalaryExpectation.Value, currency);
             }
 
-            if (!Enum.TryParse<SourceType>(request.SourceType, ignoreCase: true, out var sourceType))
+            if (!Enum.TryParse<SourceType>(request.Application.SourceType, ignoreCase: true, out var sourceType))
             {
                 return Result<ApplicationResponse>.Failure(
-                    Error.Invalid($"Invalid SourceType: {request.SourceType}"));
+                    Error.Invalid($"Invalid SourceType: {request.Application.SourceType}"));
             }
 
-            if (!Enum.TryParse<WorkType>(request.WorkType, ignoreCase: true, out var workType))
+            if (!Enum.TryParse<WorkType>(request.Application.WorkType, ignoreCase: true, out var workType))
             {
                 return Result<ApplicationResponse>.Failure(
-                    Error.Invalid($"Invalid WorkType: {request.WorkType}"));
+                    Error.Invalid($"Invalid WorkType: {request.Application.WorkType}"));
             }
 
             ApplicationSource source = sourceType switch
             {
-                SourceType.LinkedIn => ApplicationSource.LinkedIn(request.SourceUrl ?? ""),
-                SourceType.Referral => ApplicationSource.Referral(request.ReferralName ?? ""),
+                SourceType.LinkedIn => ApplicationSource.LinkedIn(request.Application.SourceUrl ?? ""),
+                SourceType.Referral => ApplicationSource.Referral(request.Application.ReferralName ?? ""),
                 _ => new ApplicationSource 
                 { 
                     Type = sourceType,
-                    Url = request.SourceUrl,
-                    ReferralContactName = request.ReferralName
+                    Url = request.Application.SourceUrl,
+                    ReferralContactName = request.Application.ReferralName
                 }
             };
 
+            var company = Company.Create(
+                name: request.Company.Name, 
+                location: request.Company.Location
+            );
 
             var application = JobApplication.Create(
-                userId: request.UserId,
-                companyId: companyId,
-                jobTitle: request.JobTitle,
+                userId: userId,
+                companyId: company.Id,
+                jobTitle: request.Application.JobTitle,
+                JobDescription: request.Application.JobDescription,
                 source: source,
                 salaryExpectation: salaryExpectation,
                 workType: workType
             );
 
+            await _companyRepository.AddAsync(company);
             await _applicationRepository.AddAsync(application, ct);
 
             var response = MapToResponse(application);
@@ -123,6 +132,9 @@ namespace JobHunting.Application.Services.Service
             var applications = await _applicationRepository.GetByUserIdAsync(userId, ct);
             var responses = applications.Select(MapToResponse).ToList().AsReadOnly();
 
+            var result = responses.Select(x => x.CompanyName).First();
+            Console.WriteLine($"Console: {result}");
+            _logger.LogInformation(result);
             return Result<IReadOnlyList<ApplicationResponse>>.Success(responses);
         }
 
@@ -172,9 +184,13 @@ namespace JobHunting.Application.Services.Service
         {
             return new ApplicationResponse(
                 Id: application.Id.Value,
-                CompanyId: application.CompanyId.Value,
                 CompanyName: "",
                 JobTitle: application.JobTitle,
+                JobDescription: application.JobDescription,
+                SalaryExpectation: application.SalaryExpectation,
+                PostedSalaryRange: application.PostedSalaryRange,
+                Source: application.Source,
+                WorkType: application.WorkType,
                 Status: application.Status,
                 AppliedDate: application.AppliedDate,
                 CreatedAt: application.CreatedAt,

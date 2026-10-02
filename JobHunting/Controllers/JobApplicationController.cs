@@ -1,6 +1,7 @@
 ﻿using JobHunting.Application.Dtos.Request;
 using JobHunting.Application.Services.Interface;
 using JobHunting.Domain.Primatives;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -17,8 +18,9 @@ namespace JobHunting.Controllers
             _service = service;
         }
 
+        [Authorize]
         [HttpPost]
-        public async Task<IActionResult> Create(CreateApplicationRequest request, CancellationToken ct = default)
+        public async Task<IActionResult> Create(CreateJobApplicationRequest request, CancellationToken ct = default)
         {
             var result = await _service.CreateAsync(request, ct);
 

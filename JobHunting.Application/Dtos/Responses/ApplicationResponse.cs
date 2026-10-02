@@ -1,4 +1,5 @@
 ﻿using JobHunting.Domain;
+using JobHunting.Domain.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,9 +8,13 @@ namespace JobHunting.Application.Dtos.Responses
 {
     public record ApplicationResponse(
         Guid Id,
-        Guid CompanyId,
         string CompanyName,
         string JobTitle,
+        string? JobDescription,
+        Money? SalaryExpectation,
+        Money? PostedSalaryRange,
+        ApplicationSource Source,
+        WorkType WorkType,
         ApplicationStatus Status,
         DateTime AppliedDate,
         DateTime CreatedAt,
